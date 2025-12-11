@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supplier Scorecard & Predictive Quality</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+</head>
+
+<body class="theme-dark font-sans antialiased min-h-screen flex flex-col md:flex-row transition-colors duration-300">
+
+
+    <!-- Mobile Top Bar -->
+    <header class="md:hidden w-full flex items-center justify-between px-4 py-3 sidebar-bg border-b border-theme z-30">
+        <div class="flex items-center gap-2">
+            <div class="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center shadow-lg">
+                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                </svg>
+            </div>
+            <span class="font-bold text-base tracking-tight text-theme-primary">SupplyOS</span>
+        </div>
+        <button id="mobile-menu-toggle"
+                class="inline-flex items-center justify-center rounded-full border border-theme px-3 py-1 text-sm text-theme-primary hover:bg-theme-hover focus:outline-none focus:ring-2 focus:ring-theme-primary">
+            <span class="mr-1">Menu</span>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M4 6h16M4 12h16M4 18h16"></path>
+            </svg>
+        </button>
+    </header>
+
+    <!-- Sidebar -->
+    <aside id="sidebar"
+        class="hidden md:flex w-64 sidebar-bg backdrop-blur-xl border-r border-theme flex-col z-40 fixed inset-y-0 left-0 md:static md:inset-auto transform -translate-x-full md:translate-x-0 transition-transform transition-colors duration-300">
+        <div class="h-16 flex items-center px-6 border-b border-theme">
+            <div
+                class="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg mr-3 flex items-center justify-center shadow-lg">
+                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                </svg>
+            </div>
+            <span class="font-bold text-lg tracking-tight text-theme-primary">SupplyOS</span>
+        </div>
+
+        <nav class="flex-1 px-3 py-6 space-y-1">
+            <a href="#"
+                class="nav-link flex items-center px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 group active-nav-item"
+                data-page="dashboard">
+                <svg class="w-5 h-5 mr-3 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z">
+                    </path>
+                </svg>
+                Dashboard
+            </a>
+            <a href="#"
+                class="nav-link flex items-center px-3 py-2.5 rounded-lg text-sm font-medium text-theme-secondary hover:text-theme-primary hover:bg-theme-hover transition-all duration-200 group"
+                data-page="suppliers">
+                <svg class="w-5 h-5 mr-3 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z">
+                    </path>
+                </svg>
+                Suppliers
+            </a>
+            <a href="#"
+                class="nav-link flex items-center px-3 py-2.5 rounded-lg text-sm font-medium text-theme-secondary hover:text-theme-primary hover:bg-theme-hover transition-all duration-200 group"
+                data-page="audits">
+                <svg class="w-5 h-5 mr-3 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4">
+                    </path>
+                </svg>
+                Audit Engine
+            </a>
+            <a href="#"
+                class="nav-link flex items-center px-3 py-2.5 rounded-lg text-sm font-medium text-theme-secondary hover:text-theme-primary hover:bg-theme-hover transition-all duration-200 group"
+                data-page="risk">
+                <svg class="w-5 h-5 mr-3 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
+                    </path>
+                </svg>
+                Risk Analysis
+            </a>
+            <a href="#"
+                class="nav-link flex items-center px-3 py-2.5 rounded-lg text-sm font-medium text-theme-secondary hover:text-theme-primary hover:bg-theme-hover transition-all duration-200 group"
+                data-page="compliance">
+                <svg class="w-5 h-5 mr-3 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                Compliance
+            </a>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col relative overflow-hidden main-bg transition-colors duration-300 md:ml-64">
+        <!-- Background Gradients -->
+        <div class="absolute top-0 left-0 w-full h-full overflow-hidden -z-10 pointer-events-none">
+            <div
+                class="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] bg-gradient-blob-1 rounded-full blur-[120px] opacity-30">
+            </div>
+            <div
+                class="absolute bottom-[-10%] left-[-5%] w-[500px] h-[500px] bg-gradient-blob-2 rounded-full blur-[120px] opacity-30">
+            </div>
+        </div>
+
+        <!-- Header -->
+        <header
+            class="h-16 flex items-center justify-between px-8 border-b border-theme backdrop-blur-sm z-10 transition-colors duration-300">
+            <h1 id="page-title" class="text-xl font-semibold text-theme-primary tracking-tight">Dashboard</h1>
+
+            <div class="flex items-center space-x-6">
+                <div class="text-sm text-theme-secondary font-medium flex items-center">
+                    <span class="w-2 h-2 rounded-full bg-green-500 mr-2 animate-pulse"></span>
+                    Supplier Scorecard & Predictive Quality • Demo
+                </div>
+
+                <!-- Theme Toggle -->
+                <button id="theme-toggle"
+                    class="flex items-center space-x-2 px-3 py-1.5 rounded-full bg-theme-toggle border border-theme hover:bg-theme-hover transition-all duration-200">
+                    <span id="theme-toggle-icon" class="text-theme-primary">
+                        <!-- Icon injected by JS -->
+                    </span>
+                    <span id="theme-toggle-label" class="text-xs font-medium text-theme-primary">Dark</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Content Area -->
+        <div class="flex-1 overflow-y-auto p-8 relative z-10 scrollbar-hide">
+
+            <!-- Dashboard Page -->
+            <section id="page-dashboard" class="page-section space-y-6 animate-fade-in" data-page-section>
+                <!-- KPI Row -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Card 1 -->
+                    <div
+                        class="glass-panel p-6 rounded-2xl border border-theme relative overflow-hidden group transition-colors duration-300">
+                        <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                            <svg class="w-16 h-16 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z">
+                                </path>
+                            </svg>
+                        </div>
+                        <h3 class="text-theme-secondary text-sm font-medium uppercase tracking-wider">Total Suppliers
+                        </h3>
+                        <div class="mt-2 flex items-baseline">
+                            <span id="kpi-total-suppliers" class="text-4xl font-bold text-theme-primary">--</span>
+                        </div>
+                    </div>
+
+                    <!-- Card 2 -->
+                    <div
+                        class="glass-panel p-6 rounded-2xl border border-theme relative overflow-hidden group transition-colors duration-300">
+                        <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                            <svg class="w-16 h-16 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
+                                </path>
+                            </svg>
+                        </div>
+                        <h3 class="text-theme-secondary text-sm font-medium uppercase tracking-wider">High-Risk
+                            Suppliers</h3>
+                        <div class="mt-2 flex items-baseline">
+                            <span id="kpi-high-risk-suppliers" class="text-4xl font-bold text-theme-primary">--</span>
+                        </div>
+                    </div>
+
+                    <!-- Card 3 -->
+                    <div
+                        class="glass-panel p-6 rounded-2xl border border-theme relative overflow-hidden group transition-colors duration-300">
+                        <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                            <svg class="w-16 h-16 text-purple-500" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-theme-secondary text-sm font-medium uppercase tracking-wider">Compliance Score
+                        </h3>
+                        <div class="mt-2 flex items-baseline">
+                            <span class="text-4xl font-bold text-theme-primary">92%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Row -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="glass-panel p-6 rounded-2xl border border-theme transition-colors duration-300">
+                        <h3 class="text-lg font-semibold text-theme-primary mb-6">Risk Distribution</h3>
+                        <div class="relative h-64 w-full flex items-center justify-center">
+                            <canvas id="riskChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Suppliers Page -->
+            
+<section id="page-suppliers" class="page-section hidden animate-fade-in" data-page-section>
+    <div class="glass-panel rounded-2xl border border-theme overflow-hidden transition-colors duration-300">
+        <div class="p-6 border-b border-theme flex justify-between items-center gap-3">
+            <h3 class="text-lg font-semibold text-theme-primary">Supplier Directory</h3>
+            <button id="btn-add-supplier"
+                    class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium bg-accent/90 text-white shadow hover:bg-accent">
+                <span>+ Add Supplier</span>
+            </button>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left">
+                <thead>
+                    <tr class="bg-theme-hover text-theme-secondary text-xs uppercase tracking-wider">
+                        <th class="px-6 py-4 font-medium">ID</th>
+                        <th class="px-6 py-4 font-medium">Name</th>
+                        <th class="px-6 py-4 font-medium">Country</th>
+                        <th class="px-6 py-4 font-medium">Risk</th>
+                        <th class="px-6 py-4 font-medium">Category</th>
+                    </tr>
+                </thead>
+                <tbody id="supplier-list-body" class="divide-y divide-theme text-sm">
+                    <!-- Populated by JS -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+<!-- Add Supplier Modal -->
+<div id="add-supplier-modal"
+     class="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 hidden">
+    <div class="glass-panel w-full max-w-lg rounded-2xl border border-theme shadow-xl">
+        <div class="flex justify-between items-center px-6 py-4 border-b border-theme">
+            <h3 class="text-base font-semibold text-theme-primary">Add New Supplier</h3>
+            <button id="close-add-supplier"
+                    class="text-theme-secondary hover:text-theme-primary text-xl leading-none">&times;</button>
+        </div>
+        <form id="add-supplier-form" class="px-6 py-4 space-y-4">
+            <div class="grid gap-4 sm:grid-cols-2">
+                <div class="sm:col-span-2">
+                    <label for="new-supplier-name" class="block text-xs font-medium text-theme-secondary mb-1">
+                        Supplier Name
+                    </label>
+                    <input id="new-supplier-name" type="text" required
+                           class="w-full rounded-lg border border-theme bg-transparent px-3 py-2 text-sm text-theme-primary focus:outline-none focus:ring-1 focus:ring-accent">
+                </div>
+                <div>
+                    <label for="new-supplier-country" class="block text-xs font-medium text-theme-secondary mb-1">
+                        Country
+                    </label>
+                    <input id="new-supplier-country" type="text" required
+                           class="w-full rounded-lg border border-theme bg-transparent px-3 py-2 text-sm text-theme-primary focus:outline-none focus:ring-1 focus:ring-accent">
+                </div>
+                <div>
+                    <label for="new-supplier-category" class="block text-xs font-medium text-theme-secondary mb-1">
+                        Category
+                    </label>
+                    <input id="new-supplier-category" type="text" required
+                           class="w-full rounded-lg border border-theme bg-transparent px-3 py-2 text-sm text-theme-primary focus:outline-none focus:ring-1 focus:ring-accent">
+                </div>
+                <div class="sm:col-span-2">
+                    <label for="new-supplier-risk" class="block text-xs font-medium text-theme-secondary mb-1">
+                        Initial Risk Level
+                    </label>
+                    <select id="new-supplier-risk" required
+                            class="w-full rounded-lg border border-theme bg-main-bg px-3 py-2 text-sm text-theme-primary focus:outline-none focus:ring-1 focus:ring-accent">
+                        <option value="Low">Low</option>
+                        <option value="Medium" selected>Medium</option>
+                        <option value="High">High</option>
+                    </select>
+                </div>
+            </div>
+            <div class="flex justify-end gap-2 pt-2">
+                <button type="button" id="cancel-add-supplier"
+                        class="px-3 py-1.5 text-xs rounded-full border border-theme text-theme-secondary hover:bg-theme-hover">
+                    Cancel
+                </button>
+                <button type="submit"
+                        class="px-4 py-1.5 text-xs font-medium rounded-full bg-accent text-white shadow hover:bg-accent/90">
+                    Save Supplier
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+            <!-- Audits Page -->
+            <section 
+id="page-audits" class="page-section hidden animate-fade-in" data-page-section>
+    <div class="grid gap-6 lg:grid-cols-[2fr,1.2fr] items-start">
+        <!-- Audit Form -->
+        <div class="glass-panel rounded-2xl border border-theme overflow-hidden transition-colors duration-300">
+            <div class="px-6 py-4 border-b border-theme flex items-center justify-between">
+                <div>
+                    <h3 class="text-lg font-semibold text-theme-primary">Internal Audit Engine</h3>
+                    <p class="text-xs text-theme-secondary mt-1">
+                        Score supplier audits using a simple risk model and auto-suggested actions.
+                    </p>
+                </div>
+                <span class="text-[10px] px-2 py-0.5 rounded-full border border-theme text-theme-secondary">
+                    Demo • v0.1
+                </span>
+            </div>
+            <form id="audit-form" class="px-6 py-5 space-y-5">
+                <div>
+                    <label for="audit-supplier" class="block text-xs font-medium text-theme-secondary mb-1">
+                        Supplier
+                    </label>
+                    <select id="audit-supplier" required
+                            class="w-full rounded-lg border border-theme bg-main-bg px-3 py-2 text-sm text-theme-primary focus:outline-none focus:ring-1 focus:ring-accent">
+                        <!-- Options populated by JS -->
+                    </select>
+                </div>
+
+                <div class="grid gap-4 md:grid-cols-2">
+                    <!-- Question 1 -->
+                    <div class="rounded-xl border border-theme px-4 py-3">
+                        <p class="text-xs font-medium text-theme-primary mb-2">Receiving & Documentation</p>
+                        <p class="text-[11px] text-theme-secondary mb-2">COAs, delivery checks, documentation on arrival.</p>
+                        <div class="flex flex-col gap-1 text-[11px] text-theme-secondary">
+                            <label class="inline-flex items-center gap-2">
+                                <input type="radio" name="q_receiving" value="0" class="accent-accent" checked>
+                                <span>Meets expectations (no major gaps)</span>
+                            </label>
+                            <label class="inline-flex items-center gap-2">
+                                <input type="radio" name="q_receiving" value="1" class="accent-accent">
+                                <span>Minor gaps / occasional misses</span>
+                            </label>
+                            <label class="inline-flex items-center gap-2">
+                                <input type="radio" name="q_receiving" value="2" class="accent-accent">
+                                <span>Frequent missing docs or checks</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Question 2 -->
+                    <div class="rounded-xl border border-theme px-4 py-3">
+                        <p class="text-xs font-medium text-theme-primary mb-2">Storage & Temperature Control</p>
+                        <p class="text-[11px] text-theme-secondary mb-2">Monitoring of chill, frozen, and ambient zones.</p>
+                        <div class="flex flex-col gap-1 text-[11px] text-theme-secondary">
+                            <label class="inline-flex items-center gap-2">
+                                <input type="radio" name="q_storage" value="0" class="accent-accent" checked>
+                                <span>Records complete & in spec</span>
+                            </label>
+                            <label class="inline-flex items-center gap-2">
+                                <input type="radio" name="q_storage" value="1" class="accent-accent">
+                                <span>Occasional deviations / missing data</span>
+                            </label>
+                            <label class="inline-flex items-center gap-2">
+                                <input type="radio" name="q_storage" value="2" class="accent-accent">
+                                <span>Repeated deviations or unmonitored areas</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Question 3 -->
+                    <div class="rounded-xl border border-theme px-4 py-3">
+                        <p class="text-xs font-medium text-theme-primary mb-2">Cleaning & Hygiene</p>
+                        <p class="text-[11px] text-theme-secondary mb-2">Sanitation records and visual hygiene checks.</p>
+                        <div class="flex flex-col gap-1 text-[11px] text-theme-secondary">
+                            <label class="inline-flex items-center gap-2">
+                                <input type="radio" name="q_cleaning" value="0" class="accent-accent" checked>
+                                <span>Planned, documented and effective</span>
+                            </label>
+                            <label class="inline-flex items-center gap-2">
+                                <input type="radio" name="q_cleaning" value="1" class="accent-accent">
+                                <span>Some missed records / minor findings</span>
+                            </label>
+                            <label class="inline-flex items-center gap-2">
+                                <input type="radio" name="q_cleaning" value="2" class="accent-accent">
+                                <span>Major or repeated cleaning failures</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Question 4 -->
+                    <div class="rounded-xl border border-theme px-4 py-3">
+                        <p class="text-xs font-medium text-theme-primary mb-2">Allergen Control</p>
+                        <p class="text-[11px] text-theme-secondary mb-2">Segregation, changeover, and label control.</p>
+                        <div class="flex flex-col gap-1 text-[11px] text-theme-secondary">
+                            <label class="inline-flex items-center gap-2">
+                                <input type="radio" name="q_allergen" value="0" class="accent-accent" checked>
+                                <span>Validated plan in place</span>
+                            </label>
+                            <label class="inline-flex items-center gap-2">
+                                <input type="radio" name="q_allergen" value="1" class="accent-accent">
+                                <span>Some weaknesses identified</span>
+                            </label>
+                            <label class="inline-flex items-center gap-2">
+                                <input type="radio" name="q_allergen" value="2" class="accent-accent">
+                                <span>Unclear or ineffective control</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-end pt-2">
+                    <button type="submit"
+                            class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent text-white text-xs font-medium shadow hover:bg-accent/90">
+                        <span>Run Audit Scoring</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Results Panel -->
+        <div class="glass-panel rounded-2xl border border-theme overflow-hidden transition-colors duration-300">
+            <div class="px-6 py-4 border-b border-theme flex items-center justify-between">
+                <h3 class="text-sm font-semibold text-theme-primary">Latest Audit Insight</h3>
+                <span id="audit-result-badge"
+                      class="px-2.5 py-0.5 rounded-full text-[10px] font-medium border border-theme text-theme-secondary">
+                    Pending
+                </span>
+            </div>
+            <div class="px-6 py-5 space-y-4 text-sm">
+                <div class="flex items-center justify-between">
+                    <p class="text-theme-secondary text-xs">Total Risk Score</p>
+                    <p id="audit-score" class="text-lg font-semibold text-theme-primary">–</p>
+                </div>
+                <div class="flex items-center justify-between">
+                    <p class="text-theme-secondary text-xs">Overall Risk Level</p>
+                    <p id="audit-risk-level" class="text-sm font-semibold text-theme-primary">–</p>
+                </div>
+                <div class="pt-3 border-t border-theme">
+                    <p class="text-xs font-medium text-theme-secondary mb-1">Recommended Action</p>
+                    <p id="audit-recommendation" class="text-xs text-theme-secondary leading-relaxed">
+                        Run an audit to generate a risk insight and suggested corrective action.
+                    </p>
+                </div>
+                <p class="text-[10px] text-theme-secondary/80 pt-2">
+                    Scoring model: 0 = OK, 1 = minor gap, 2 = major gap. Higher total = higher risk.
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+            <!-- Risk Page -->
+            <section 
+id="page-risk" class="page-section hidden animate-fade-in" data-page-section>
+    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <!-- Risk Overview Chart -->
+        <div class="xl:col-span-2 space-y-4">
+            <div class="glass-panel rounded-2xl border border-theme h-80 flex flex-col">
+                <div class="px-6 py-4 border-b border-theme flex items-center justify-between">
+                    <div>
+                        <h3 class="text-lg font-semibold text-theme-primary">Portfolio Risk Overview</h3>
+                        <p class="text-xs text-theme-secondary mt-1">
+                            Live breakdown of suppliers by current risk level. Updated whenever audits or risk scores change.
+                        </p>
+                    </div>
+                    <span class="text-[11px] px-2 py-0.5 rounded-full border border-theme text-theme-secondary">
+                        Auto-refresh
+                    </span>
+                </div>
+                <div class="flex-1 px-6 pb-4 pt-2">
+                    <canvas id="riskAnalysisBar" class="w-full h-full"></canvas>
+                </div>
+            </div>
+
+            <div class="glass-panel rounded-2xl border border-theme p-6">
+                <h4 class="text-sm font-semibold text-theme-primary mb-2">How to read this view</h4>
+                <p class="text-xs text-theme-secondary leading-relaxed">
+                    Each bar shows how many active suppliers are currently classified as Low, Medium, or High risk
+                    based on the latest score stored in the system. When you run a new internal audit in the Audit
+                    Engine, the supplier's risk is updated and this chart reacts immediately &mdash; giving QA teams a
+                    fast, portfolio-level signal instead of digging through Excel sheets.
+                </p>
+            </div>
+        </div>
+
+        <!-- File Ingestion / SPSS Prototype -->
+        <div class="space-y-4">
+            <div class="glass-panel rounded-2xl border border-theme p-6">
+                <h3 class="text-lg font-semibold text-theme-primary mb-1">Import Audit Data</h3>
+                <p class="text-xs text-theme-secondary mb-4">
+                    Prototype import for Excel- and SPSS-style audit files. In a real deployment this would be backed
+                    by a secure API; here it demonstrates how SafeSupply OS could ingest external scoring logic.
+                </p>
+
+                <div class="space-y-3">
+                    <label class="block text-xs font-medium text-theme-secondary mb-1">
+                        Upload file (.xls, .xlsx, .csv, .sav, .sps)
+                    </label>
+                    <input type="file" id="audit-file-input"
+                           class="block w-full text-xs text-theme-secondary file:mr-3 file:py-1.5 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-theme-accent/10 file:text-theme-primary hover:file:bg-theme-accent/20" />
+
+                    <div id="audit-upload-status" class="text-xs mt-1 text-theme-secondary">
+                        No file imported yet.
+                    </div>
+                    <div id="audit-upload-details" class="mt-2 text-[11px] text-theme-secondary/80 whitespace-pre-line">
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-panel rounded-2xl border border-theme p-4">
+                <h4 class="text-xs font-semibold text-theme-primary mb-1">Why SPSS?</h4>
+                <p class="text-[11px] text-theme-secondary leading-relaxed">
+                    Many food companies already analyse audit data in tools like SPSS. SafeSupply OS is designed to
+                    plug into that workflow: Excel or SPSS exports are scored, summarised, and then translated into
+                    simple Low / Medium / High signals for busy QA managers, while preserving the statistical logic
+                    behind the scenes.
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+            <!-- Compliance Page -->
+            <section 
+id="page-compliance" class="page-section hidden animate-fade-in" data-page-section>
+    <div class="glass-panel rounded-2xl border border-theme overflow-hidden transition-colors duration-300">
+        <div class="px-6 py-4 border-b border-theme flex items-center justify-between">
+            <div>
+                <h3 class="text-lg font-semibold text-theme-primary">Regulatory Snapshot</h3>
+                <p class="text-xs text-theme-secondary mt-1">
+                    Lightweight view of how a supplier aligns with US FSMA and EU CSDDD expectations.
+                </p>
+            </div>
+            <span class="text-[10px] px-2 py-0.5 rounded-full border border-theme text-theme-secondary">
+                Prototype
+            </span>
+        </div>
+        <div class="px-6 py-5 overflow-x-auto">
+            <table class="w-full text-left text-xs md:text-sm">
+                <thead>
+                    <tr class="bg-theme-hover text-theme-secondary text-[11px] uppercase tracking-wider">
+                        <th class="px-4 py-3 font-medium">Requirement</th>
+                        <th class="px-4 py-3 font-medium">US FSMA</th>
+                        <th class="px-4 py-3 font-medium">EU CSDDD / ESG</th>
+                        <th class="px-4 py-3 font-medium">Evidence Examples</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-theme text-xs">
+                    <tr>
+                        <td class="px-4 py-3 align-top text-theme-primary font-medium">
+                            Traceability
+                        </td>
+                        <td class="px-4 py-3 align-top text-theme-secondary">
+                            Focused on high-risk foods and critical tracking events.
+                        </td>
+                        <td class="px-4 py-3 align-top text-theme-secondary">
+                            Broader value-chain transparency, including ESG impacts and suppliers.
+                        </td>
+                        <td class="px-4 py-3 align-top text-theme-secondary">
+                            Batch logs, COAs, shipping records, supplier declarations.
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="px-4 py-3 align-top text-theme-primary font-medium">
+                            Risk Management
+                        </td>
+                        <td class="px-4 py-3 align-top text-theme-secondary">
+                            Hazard analysis, preventive controls, verification of critical limits.
+                        </td>
+                        <td class="px-4 py-3 align-top text-theme-secondary">
+                            Due diligence on human rights, environment, and governance risks.
+                        </td>
+                        <td class="px-4 py-3 align-top text-theme-secondary">
+                            Supplier risk scores, audit reports, CAPA records, ESG questionnaires.
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="px-4 py-3 align-top text-theme-primary font-medium">
+                            Corrective Actions
+                        </td>
+                        <td class="px-4 py-3 align-top text-theme-secondary">
+                            Documented CAPA when deviations or hazards are identified.
+                        </td>
+                        <td class="px-4 py-3 align-top text-theme-secondary">
+                            Remediation plans and ongoing monitoring of high-risk suppliers.
+                        </td>
+                        <td class="px-4 py-3 align-top text-theme-secondary">
+                            CAR forms, follow-up audits, revised specifications.
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="px-6 pb-4 text-[11px] text-theme-secondary">
+            This page is intentionally simple: it acts as a conversation starter for mapping supplier data to
+            regulatory expectations, not a full legal interpretation.
+        </div>
+    </div>
+</section>
+
+
+        </div>
+    </main>
+
+    <script type="module" src="js/app.js"></script>
+</body>
+
+</html>
